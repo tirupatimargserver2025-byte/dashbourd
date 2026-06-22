@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TC Lab Manager Dashboard</title>
+    <!-- Google Fonts & FontAwesome for Professional Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #1D9E75; /* PIR Teal */
+            --secondary-color: #185FA5; /* Washing / Exchange Blue */
+            --accent-purple: #6D28D9; /* Store / Opening Purple */
+            --danger-color: #EF4444;
+            --warning-color: #F59E0B;
+            --success-color: #10B981;
+            --bg-light: #F8FAFC;
+            --text-dark: #0F172A;
+            --text-muted: #64748B;
+            --sidebar-bg: #1E293B;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR STYLE --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: var(--transition);
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+        }
+
+        .sidebar-brand i {
+            color: var(--primary-color);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 2px 16px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            color: #94A3B8;
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-item.active .sidebar-link {
+            background-color: var(--primary-color);
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            background-color: #0F172A;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* --- MAIN CONTENT AREA --- */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Header */
+        .header {
+            background-color: #ffffff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #E2E8F0;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+
+        .header-title h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .date-filter-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--bg-light);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #CBD5E1;
+        }
+
+        .date-filter-box input {
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            outline: none;
+            color: var(--text-dark);
+        }
+
+        /* Tab Content Body */
+        .content-body {
+            padding: 32px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- DASHBOARD ELEMENTS (KPI CARDS) --- */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background-color: #ffffff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #F1F5F9;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .kpi-card.pir::before { background-color: var(--primary-color); }
+        .kpi-card.pgr::before { background-color: var(--secondary-color); }
+        .kpi-card.wash::before { background-color: var(--warning-color); }
+        .kpi-card.conta::before { background-color: var(--danger-color); }
+
+        .kpi-details h3 {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .kpi-details .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .kpi-card.pir .kpi-icon { background-color: #E6F4EA; color: var(--primary-color); }
+        .kpi-card.pgr .kpi-icon { background-color: #E8F0FE; color: var(--secondary-color); }
+        .kpi-card.wash .kpi-icon { background-color: #FEF3C7; color: var(--warning-color); }
+        .kpi-card.conta .kpi-icon { background-color: #FEE2E2; color: var(--danger-color); }
+
+        /* --- DATA TABLES & SECTIONS --- */
+        .section-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #E2E8F0;
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 20px 24px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .data-table th {
+            background-color: #F8FAFC;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 14px 20px;
+            border-bottom: 1px solid #E2E8F0;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 14px 20px;
+            border-bottom: 1px solid #F1F5F9;
+            color: #334155;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #F8FAFC;
+        }
+
+        /* --- FORMS & INPUT DESIGN --- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .form-control {
+            padding: 10px 14px;
+            border: 1px solid #CBD5E1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+            background-color: #ffffff;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.15);
+        }
+
+        /* --- BUTTONS & BADGES --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover { background-color: #168260; }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover { background-color: #124d87; }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success { background-color: #DCFCE7; color: #15803D; }
+        .badge-pending { background-color: #FEF3C7; color: #B45309; }
+        .badge-danger { background-color: #FEE2E2; color: #B91C1C; }
+
+        /* Bulk Input Entry Table (PIR Style) */
+        .entry-table-box {
+            padding: 24px;
+        }
+
+        .entry-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .entry-table th {
+            padding: 10px;
+            background-color: #E2E8F0;
+            font-size: 13px;
+            color: var(--text-dark);
+            text-align: center;
+        }
+
+        .entry-table td {
+            padding: 8px;
+            border: 1px solid #E2E8F0;
+        }
+
+        .entry-table input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #CBD5E1;
+            border-radius: 4px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- --- APP SIDEBAR --- -->
+    <div class="sidebar">
+        <div>
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-flask-vial"></i>
+                <span>TC Lab Manager</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item active" onclick="switchTab('dashboard', this)">
+                    <a class="sidebar-link"><i class="fa-solid fa-chart-pie"></i>मुख्य डैशबोर्ड</a>
+                </li>
+                <li class="sidebar-item" onclick="switchTab('pir-room', this)">
+                    <a class="sidebar-link"><i class="fa-solid fa-door-open"></i>PIR Room Entry</a>
+                </li>
+                <li class="sidebar-item" onclick="switchTab('pgr-room', this)">
+                    <a class="sidebar-link"><i class="fa-solid fa-seedling"></i>PGR Module</a>
+                </li>
+                <li class="sidebar-item" onclick="switchTab('washing', this)">
+                    <a class="sidebar-link"><i class="fa-solid fa-soap"></i>Washing & Discard</a>
+                </li>
+                <li class="sidebar-item" onclick="switchTab('dispatch', this)">
+                    <a class="sidebar-link"><i class="fa-solid fa-truck-ramp-box"></i>Dispatch Module</a>
+                </li>
+                <li class="sidebar-item" onclick="switchTab('store-room', this)">
+                    <a class="sidebar-link"><i class="fa-solid fa-warehouse"></i>Store Inventory</a>
+                </li>
+                <li class="sidebar-item" onclick="switchTab('mpr', this)">
+                    <a class="sidebar-link"><i class="fa-solid fa-recipe"></i>MPR (Media Prep)</a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">A</div>
+                <div>
+                    <h4 style="font-size: 14px; font-weight: 600;" id="user-display-name">Admin</h4>
+                    <p style="font-size: 11px; color: #94A3B8;" id="user-display-role">Administrator</p>
+                </div>
+            </div>
+            <i class="fa-solid fa-right-from-bracket" style="color: #94A3B8; cursor: pointer;"></i>
+        </div>
+    </div>
+
+    <!-- --- MAIN CONTAINER --- -->
+    <div class="main-content">
+        <!-- Top Header Bar -->
+        <div class="header">
+            <div class="header-title">
+                <h1 id="page-title">Lab Overview Dashboard</h1>
+            </div>
+            <div class="header-actions">
+                <div class="date-filter-box">
+                    <i class="fa-regular fa-calendar-days" style="color: var(--text-muted)"></i>
+                    <input type="date" id="filter-date-from" value="2026-06-01">
+                    <span style="color: var(--text-muted)">to</span>
+                    <input type="date" id="filter-date-to" value="2026-06-30">
+                </div>
+                <button class="btn btn-primary" onclick="refreshAllData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+            </div>
+        </div>
+
+        <!-- Dynamic Content Body -->
+        <div class="content-body">
+
+            <!-- 1. MAIN DASHBOARD PANEL -->
+            <div id="dashboard" class="tab-panel active">
+                <!-- KPI Summary Grid -->
+                <div class="kpi-grid">
+                    <div class="kpi-card pir">
+                        <div class="kpi-details">
+                            <h3>Total Output Bottles</h3>
+                            <div class="value" id="kpi-total-bottles">14,250</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fa-solid fa-wine-bottle"></i></div>
+                    </div>
+                    <div class="kpi-card pgr">
+                        <div class="kpi-details">
+                            <h3>Total Culture Used</h3>
+                            <div class="value" id="kpi-total-culture">3,840</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fa-solid fa-microscope"></i></div>
+                    </div>
+                    <div class="kpi-card wash">
+                        <div class="kpi-details">
+                            <h3>Avg Multiplication Rate</h3>
+                            <div class="value" id="kpi-avg-mr">4.20</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
+                    </div>
+                    <div class="kpi-card conta">
+                        <div class="kpi-details">
+                            <h3>Pending Contamination</h3>
+                            <div class="value" id="kpi-conta-pending">12</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fa-solid fa-biohazard"></i></div>
+                    </div>
+                </div>
+
+                <!-- Room Wise Breakdown Table -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>PIR Room Status Summary (कमरा अनुसार विवरण)</h2>
+                        <span class="badge badge-success">All Rooms Active</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Room No</th>
+                                    <th>Total Entries</th>
+                                    <th>Total Bottles</th>
+                                    <th>Average MR</th>
+                                    <th>Pending Contamination</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-rooms-tbody">
+                                <tr>
+                                    <td>Room 01</td>
+                                    <td>45</td>
+                                    <td>2,450</td>
+                                    <td>4.10</td>
+                                    <td><span class="badge badge-pending">2 Pending</span></td>
+                                    <td><span class="badge badge-success">Normal</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Room 02</td>
+                                    <td>38</td>
+                                    <td>1,980</td>
+                                    <td>4.35</td>
+                                    <td><span class="badge badge-success">0 Clean</span></td>
+                                    <td><span class="badge badge-success">Normal</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Room 03</td>
+                                    <td>52</td>
+                                    <td>3,100</td>
+                                    <td>3.95</td>
+                                    <td><span class="badge badge-danger">5 Critical</span></td>
+                                    <td><span class="badge badge-success">Normal</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. PIR ROOM DATA ENTRY PANEL -->
+            <div id="pir-room" class="tab-panel">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>New PIR Lab Bulk Entry Form (नया बैच प्रोडक्शन एंट्री)</h2>
+                    </div>
+                    <!-- Master Info Row -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Room Number</label>
+                            <select class="form-control" id="pir-form-room">
+                                <option value="1">Room 01</option>
+                                <option value="2">Room 02</option>
+                                <option value="3">Room 03</option>
+                                <option value="10">Room 10</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Shift</label>
+                            <select class="form-control" id="pir-form-shift">
+                                <option value="Day">Day Shift</option>
+                                <option value="Night">Night Shift</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Crop Name (फसल)</label>
+                            <select class="form-control" id="pir-form-crop">
+                                <option value="BANANA">BANANA</option>
+                                <option value="BAMBOO">BAMBOO</option>
+                                <option value="TEAK">TEAK</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Variety</label>
+                            <input type="text" class="form-control" id="pir-form-variety" value="G-09">
+                        </div>
+                        <div class="form-group">
+                            <label>LOT Number</label>
+                            <input type="text" class="form-control" id="pir-form-lot" placeholder="e.g. L-5021">
+                        </div>
+                        <div class="form-group">
+                            <label>Cycle Step</label>
+                            <input type="text" class="form-control" id="pir-form-cycle" value="M-01">
+                        </div>
+                    </div>
+
+                    <!-- Operator Dynamic Entry Table Grid -->
+                    <div class="entry-table-box">
+                        <table class="entry-table">
+                            <thead>
+                                <tr>
+                                    <th>Operator Name</th>
+                                    <th>Code</th>
+                                    <th>Used Bottle</th>
+                                    <th>Clams Factor</th>
+                                    <th>SH Bottle</th>
+                                    <th>MUL Bottle</th>
+                                    <th>RT Bottle</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pir-operator-rows">
+                                <tr>
+                                    <td><input type="text" class="form-control op-name" placeholder="Operator Name"></td>
+                                    <td><input type="text" class="form-control op-code" placeholder="Code"></td>
+                                    <td><input type="number" class="form-control op-used-b" value="0"></td>
+                                    <td><input type="number" class="form-control op-clams" value="4"></td>
+                                    <td><input type="number" class="form-control op-sh" value="0"></td>
+                                    <td><input type="number" class="form-control op-mul" value="0"></td>
+                                    <td><input type="number" class="form-control op-rt" value="0"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                            <button class="btn btn-secondary" onclick="addOperatorRow()"><i class="fa-solid fa-plus"></i> Add Row</button>
+                            <button class="btn btn-primary" onclick="submitPirEntries()"><i class="fa-solid fa-cloud-arrow-up"></i> Save All Entries</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. PGR PRODUCTION & EXCHANGE PANEL -->
+            <div id="pgr-room" class="tab-panel">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>PGR Room & Plant growth Exchange Logs</h2>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>PGR Search Target LOT</label>
+                            <input type="text" class="form-control" id="pgr-filter-lot" placeholder="Search Lot...">
+                        </div>
+                        <div class="form-group" style="justify-content: flex-end; display: flex;">
+                            <button class="btn btn-secondary" style="width: 100%;" onclick="loadPgrData()">Filter Logs</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Sr.No</th>
+                                    <th>Date</th>
+                                    <th>LOT</th>
+                                    <th>Crop</th>
+                                    <th>Tray Count</th>
+                                    <th>Total Bottles</th>
+                                    <th>Contamination %</th>
+                                    <th>Supervisor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pgr-logs-tbody">
+                                <!-- Dynamically filled from Apps Script -->
+                                <tr>
+                                    <td colspan="8" style="text-align: center; color: var(--text-muted);">Please hit refresh or load records...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. WASHING MODULE PANEL -->
+            <div id="washing" class="tab-panel">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Washing & Media Discard Logs (धुलाई और वेस्टेज रिकॉर्ड)</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Sr.No</th>
+                                    <th>Date</th>
+                                    <th>Shift</th>
+                                    <th>Operator</th>
+                                    <th>Category Task</th>
+                                    <th>Sub-Category</th>
+                                    <th>Batch No</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="washing-report-tbody">
+                                <tr>
+                                    <td>1</td>
+                                    <td>18-Jun-2026</td>
+                                    <td>Day</td>
+                                    <td>Rahul Kumar</td>
+                                    <td>Bottle Washing</td>
+                                    <td>Glass Bottle 200ml</td>
+                                    <td>B-902</td>
+                                    <td>1,200 Pcs</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. DISPATCH MODULE PANEL -->
+            <div id="dispatch" class="tab-panel">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Dispatch Inward & Outward Stocks (तैयार पोधो का डिस्पैच विवरण)</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Crop</th>
+                                    <th>Variety</th>
+                                    <th>LOT</th>
+                                    <th>Total Inward</th>
+                                    <th>Total Dispatched</th>
+                                    <th>Available Stock</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dispatch-stock-tbody">
+                                <!-- Filled via getDispatchStockReport script function -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. STORE INVENTORY PANEL -->
+            <div id="store-room" class="tab-panel">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Store Inventory Stock Ledger (स्टोर रूम का कच्चा माल और स्टॉक)</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Category</th>
+                                    <th>Opening Qty</th>
+                                    <th>Total Purchase</th>
+                                    <th>Total Issued</th>
+                                    <th>Available Balance</th>
+                                    <th>Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="store-stock-tbody">
+                                <!-- Populated using getStoreStockReport -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. MPR (MEDIA PREPARATION) PANEL -->
+            <div id="mpr" class="tab-panel">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Media Preparation & Autoclave Batches (मीडिया लैब प्रोडक्शन)</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Media Type</th>
+                                    <th>Batch No</th>
+                                    <th>Container</th>
+                                    <th>Total Filled Quantity</th>
+                                    <th>Autoclave Done</th>
+                                    <th>Operator Name</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mpr-production-tbody">
+                                <!-- Populated using getMprLog -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- --- JAVASCRIPT APP ROUTING & INTEGRATION --- -->
+    <script>
+        // Tab switching function
+        function switchTab(tabId, el) {
+            // Update Active link styling in sidebar
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            el.classList.add('active');
+
+            // Switch content page panels
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            // Set Title dynamically
+            const titles = {
+                'dashboard': 'Lab Overview Dashboard',
+                'pir-room': 'PIR Production Entry Screen',
+                'pgr-room': 'Plant Growth Room Logistics',
+                'washing': 'Washing & Discard Registry',
+                'dispatch': 'Dispatch Center Hub',
+                'store-room': 'Store Inventory System',
+                'mpr': 'Media Preparation Room'
+            };
+            document.getElementById('page-title').innerText = titles[tabId] || 'TC Lab Manager';
+        }
+
+        // Add dynamically extra operator lines in Bulk Data entry grid
+        function addOperatorRow() {
+            const tbody = document.getElementById('pir-operator-rows');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" class="form-control op-name" placeholder="Operator Name"></td>
+                <td><input type="text" class="form-control op-code" placeholder="Code"></td>
+                <td><input type="number" class="form-control op-used-b" value="0"></td>
+                <td><input type="number" class="form-control op-clams" value="4"></td>
+                <td><input type="number" class="form-control op-sh" value="0"></td>
+                <td><input type="number" class="form-control op-mul" value="0"></td>
+                <td><input type="number" class="form-control op-rt" value="0"></td>
+            `;
+            tbody.appendChild(newRow);
+        }
+
+        // Parse and Submit PIR entries back to Google Apps Script backend 'saveBulkEntries'
+        function submitPirEntries() {
+            const rows = [];
+            const trs = document.querySelectorAll('#pir-operator-rows tr');
+            
+            trs.forEach(tr => {
+                const operator = tr.querySelector('.op-name').value;
+                const operatorCode = tr.querySelector('.op-code').value;
+                if(operator.trim() !== "") {
+                    rows.push({
+                        operator: operator,
+                        operatorCode: operatorCode,
+                        usedBottle: tr.querySelector('.op-used-b').value,
+                        usedClams: tr.querySelector('.op-clams').value,
+                        shBottle: tr.querySelector('.op-sh').value,
+                        mulBottle: tr.querySelector('.op-mul').value,
+                        rtBottle: tr.querySelector('.op-rt').value
+                    });
+                }
+            });
+
+            const payload = {
+                room: document.getElementById('pir-form-room').value,
+                shift: document.getElementById('pir-form-shift').value,
+                crop: document.getElementById('pir-form-crop').value,
+                variety: document.getElementById('pir-form-variety').value,
+                lot: document.getElementById('pir-form-lot').value,
+                cycle: document.getElementById('pir-form-cycle').value,
+                supervisorName: document.getElementById('user-display-name').innerText,
+                date: new Date().toISOString().split('T')[0],
+                rows: rows
+            };
+
+            console.log("Submitting Payload to Apps Script:", payload);
+            
+            // Apps Script Execution Bridge
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(function(res) {
+                        alert(res.message || "Entries saved successfully!");
+                        // Reset forms or update numbers
+                    })
+                    .withFailureHandler(function(err) {
+                        alert("Error saving entries: " + err.message);
+                    })
+                    .saveBulkEntries(payload);
+            } else {
+                alert("Google App Script environment missing! This UI looks professional but needs to be uploaded to your Google Apps Script editor.");
+            }
+        }
+
+        // Fetch numbers from backend hooks to keep dashboard accurate
+        function refreshAllData() {
+            const fromDate = document.getElementById('filter-date-from').value;
+            const toDate = document.getElementById('filter-date-to').value;
+
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                // 1. Load Main Dashboard Metrics
+                google.script.run
+                    .withSuccessHandler(function(data) {
+                        document.getElementById('kpi-total-bottles').innerText = Number(data.totalBottles).toLocaleString();
+                        document.getElementById('kpi-total-culture').innerText = Number(data.totalCulture).toLocaleString();
+                        document.getElementById('kpi-avg-mr').innerText = data.avgMr;
+                        document.getElementById('kpi-conta-pending').innerText = data.contaPending;
+                        
+                        // Map rooms array into the main dashboard screen overview table
+                        let html = '';
+                        data.rooms.forEach(r => {
+                            html += `<tr>
+                                <td>Room ${r.room}</td>
+                                <td>${r.entries}</td>
+                                <td>${Number(r.bottles).toLocaleString()}</td>
+                                <td>${r.avgMr}</td>
+                                <td><span class="badge ${r.pendingConta > 0 ? 'badge-pending':'badge-success'}">${r.pendingConta} Pending</span></td>
+                                <td><span class="badge badge-success">Active</span></td>
+                            </tr>`;
+                        });
+                        document.getElementById('dashboard-rooms-tbody').innerHTML = html;
+                    })
+                    .getMainDashboard(fromDate, toDate);
+            }
+        }
+
+        // Auto initialization check on window layout mount
+        window.onload = function() {
+            refreshAllData();
+        };
+    </script>
+</body>
+</html>
